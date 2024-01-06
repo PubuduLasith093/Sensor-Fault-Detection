@@ -1,4 +1,4 @@
-from sensor.entity.config_entity import DataIngestionConfig, TrainingPipelineConfig, DataValidationConfig
+from sensor.entity.config_entity import DataIngestionConfig, TrainingPipelineConfig, DataValidationConfig, DataTransformationConfig
 import os, sys
 from sensor.exception import SensorException
 import sys,os
@@ -6,6 +6,7 @@ from sensor.logger import logging
 from sensor.entity.artifact_entity import DataIngestionArtifact, DataValidationArtifact
 from sensor.components.data_ingestion import DataIngestion
 from sensor.components.data_validation import DataValidation
+from sensor.components.data_transformation import DataTransformation
 
 class TrainingPipeline:
     def __init__(self):
@@ -35,6 +36,17 @@ class TrainingPipeline:
         except  Exception as e:
             raise  SensorException(e,sys)
         
+    def start_data_transformation(self,data_validation_artifact:DataValidationArtifact):
+        try:
+            data_transformation_config = DataTransformationConfig(training_pipeline_config=self.trainig_pipeline_config)
+            data_transformation = DataTransformation(data_validation_artifact=data_validation_artifact,
+            data_transformation_config=data_transformation_config
+            )
+            data_transformation_artifact =  data_transformation.initiate_data_transformation()
+            return data_transformation_artifact
+        except  Exception as e:
+            raise  SensorException(e,sys)
+        
     def run_pipeline(self):
         try:
             
@@ -42,7 +54,7 @@ class TrainingPipeline:
 
             data_ingestion_artifact:DataIngestionArtifact = self.start_data_ingestion()
             data_validation_artifact=self.start_data_validaton(data_ingestion_artifact=data_ingestion_artifact)
-            # data_transformation_artifact = self.start_data_transformation(data_validation_artifact=data_validation_artifact)
+            data_transformation_artifact = self.start_data_transformation(data_validation_artifact=data_validation_artifact)
             # model_trainer_artifact = self.start_model_trainer(data_transformation_artifact)
             # model_eval_artifact = self.start_model_evaluation(data_validation_artifact, model_trainer_artifact)
             # if not model_eval_artifact.is_model_accepted:
