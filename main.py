@@ -17,6 +17,7 @@ from sensor.utils.main_utils import load_object
 from fastapi.middleware.cors import CORSMiddleware
 import os
 
+
 env_file_path=os.path.join(os.getcwd(),"env.yaml")
 
 def set_env_variable(env_file_path):
@@ -41,6 +42,12 @@ app.add_middleware(
 @app.get("/", tags=["authentication"])
 async def index():
     return RedirectResponse(url="/docs")
+
+
+@app.get("/ping")
+async def ping():
+    return {"status": "healthy"}
+
 
 @app.get("/train")
 async def train_route():
@@ -89,4 +96,7 @@ def main():
 if __name__=="__main__":
     #main()
     # set_env_variable(env_file_path)
-    app_run(app, host=APP_HOST, port=APP_PORT)
+    if "serve" in sys.argv:
+        app_run(app, host=APP_HOST, port=APP_PORT)
+    else:
+        main()
