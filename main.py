@@ -1,13 +1,12 @@
 from sensor.configuration.mongo_db_connection import MongoDBClient
 from sensor.exception import SensorException
-import os,sys
+import os,sys, math
 from sensor.logger import logging
 from sensor.pipeline import training_pipeline
 from sensor.pipeline.training_pipeline import TrainPipeline
-import os
 from sensor.utils.main_utils import read_yaml_file
 from sensor.constants.training_pipeline import SAVED_MODEL_DIR
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
 from sensor.constants.application import APP_HOST, APP_PORT
 from starlette.responses import RedirectResponse
 from uvicorn import run as app_run
@@ -15,7 +14,7 @@ from fastapi.responses import Response
 from sensor.ml.model.estimator import ModelResolver,TargetValueMapping
 from sensor.utils.main_utils import load_object
 from fastapi.middleware.cors import CORSMiddleware
-import os
+
 
 
 env_file_path=os.path.join(os.getcwd(),"env.yaml")
@@ -60,6 +59,19 @@ async def train_route():
         return Response("Training successful !!")
     except Exception as e:
         return Response(f"Error Occurred! {e}")
+    
+@app.post("/invocations")
+async def invocations(request: Request):
+    try:
+        json_data = await request.json()
+        value = json_data.get("value")
+        if value is None:
+            raise HTTPException(status_code=400, detail="Invalid input, 'value' is required.")
+        
+        result = math.sqrt(value)
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error Occurred! {e}")
 
 @app.get("/predict")
 async def predict_route():
