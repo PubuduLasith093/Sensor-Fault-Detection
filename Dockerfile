@@ -7,7 +7,6 @@ RUN pip install -r requirements.txt
 
 # Define the entry point for the container
 ENTRYPOINT ["python", "main.py"]
-
 # Serve the model
 CMD ["serve"]
 
