@@ -14,6 +14,8 @@ from fastapi.responses import Response
 from sensor.ml.model.estimator import ModelResolver,TargetValueMapping
 from sensor.utils.main_utils import load_object
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import pandas as pd
 
 
 
@@ -68,8 +70,27 @@ async def invocations(request: Request):
         if value is None:
             raise HTTPException(status_code=400, detail="Invalid input, 'value' is required.")
         
-        result = math.sqrt(value)
-        return {"result": result}
+        # Assuming 'value' is a list and needs to be converted to a DataFrame
+        df = pd.DataFrame({'value': value})
+        
+        model_resolver = ModelResolver(model_dir=SAVED_MODEL_DIR)
+        if not model_resolver.is_model_exists():
+            raise HTTPException(status_code=404, detail="Model is not available.")
+        
+        best_model_path = model_resolver.get_best_model_path()
+        model = load_object(file_path=best_model_path)
+        
+        # Making predictions
+        y_pred = model.predict(df)
+        # Assuming you want to map the predictions back to a human-readable format
+        df['predicted_column'] = y_pred
+        df['predicted_column'].replace(TargetValueMapping().reverse_mapping(), inplace=True)
+        
+        # Returning the predicted values as a JSON response
+        return JSONResponse(content={"predictions": df['predicted_column'].tolist()})
+        
+        # result = math.sqrt(value)
+        # return {"result": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error Occurred! {e}")
 

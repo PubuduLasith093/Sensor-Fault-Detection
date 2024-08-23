@@ -8,6 +8,7 @@ from xgboost import XGBClassifier
 from sensor.ml.metric.classification_metric import get_classification_score
 from sensor.ml.model.estimator import SensorModel
 from sensor.utils.main_utils import save_object,load_object
+import numpy as np
 
 class ModelTrainer:
 
@@ -45,7 +46,6 @@ class ModelTrainer:
                 test_arr[:, :-1],
                 test_arr[:, -1],
             )
-
             model = self.train_model(x_train, y_train)
             y_train_pred = model.predict(x_train)
             classification_train_metric =  get_classification_score(y_true=y_train, y_pred=y_train_pred)
